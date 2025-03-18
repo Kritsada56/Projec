@@ -1,75 +1,37 @@
 import streamlit as st
-import pandas as pd
-
-st.title("🐷🐷🐷Website Developing using Python🐷🐷")
-st.header("🍖🍖Website Developing using Python🍖🍖")
-
-st.image('./img/kairung.jpg')
-st.subheader("Kairung Hengpraprohm")
-
-dt=pd.read_csv('./data/iris-3.csv')
-st.header("ข้อมูลดอกไม้")
-st.write(dt.head(10))
-
-st.subheader("สถิติข้อมูลดอกไม้ Iris")
-st.write('ผลรวม')
-cl1,cl2,cl3,cl4=st.columns(4)
-cl1.write(dt['sepallength'].sum())
-cl2.write(dt['sepalwidth'].sum())
-cl3.write(dt['petallength'].sum())
-cl4.write(dt['petalwidth'].sum())
-
-st.write("กราฟแท่ง")
-a=dt['sepallength'].sum()
-b=dt['sepalwidth'].sum()
-c=dt['petallength'].sum()
-d=dt['petalwidth'].sum()
-dx=[a,b,c,d]
-cx=pd.DataFrame(dx,index=["sepallength", "sepalwidth", "petallength","petalwidth"])
-st.bar_chart(cx)
-
-st.write('ค่าเฉลี่ย')
-cl11,cl12,cl13,cl14=st.columns(4)
-cl11.write(dt['sepallength'].mean())
-cl12.write(dt['sepalwidth'].mean())
-cl13.write(dt['petallength'].mean())
-cl14.write(dt['petalwidth'].mean())
-
-st.write("Area_Chart")
-a=dt['sepallength'].mean()
-b=dt['sepalwidth'].mean()
-c=dt['petallength'].mean()
-d=dt['petalwidth'].mean()
-dxt=[a,b,c,d]
-cxx=pd.DataFrame(dxt,index=["sepallength", "sepalwidth", "petallength","petalwidth"])
-st.area_chart(cxx)
-
-
-st.write('ค่ามากที่สุด')
-cl21,cl22,cl23,cl24=st.columns(4)
-cl21.write(dt['sepallength'].max())
-cl22.write(dt['sepalwidth'].max())
-cl23.write(dt['petallength'].max())
-cl24.write(dt['petalwidth'].max())
-
 import numpy as np
-import matplotlib.pyplot as plt
-labels = ['Men', 'Women','','']
-sizes = [35,25,15,25]
-explode = (0, 0.1,0,0) 
-fig1, ax1 = plt.subplots()
-ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
-        shadow=True, startangle=90)
-st.pyplot(fig1)
+import pandas as pd
+from sklearn.naive_bayes import GaussianNB
+from sklearn.datasets import load_iris
 
+# โหลดชุดข้อมูล Iris
+iris = load_iris()
+X, y = iris.data, iris.target
+model = GaussianNB()
+model.fit(X, y)  # ฝึกโมเดลล่วงหน้า
 
-st.write('ค่าน้อยที่สุด')
-cl31,cl32,cl33,cl34=st.columns(4)
-cl31.write(dt['sepallength'].min())
-cl32.write(dt['sepalwidth'].min())
-cl33.write(dt['petallength'].min())
-cl34.write(dt['petalwidth'].min())
+# ตั้งค่าหน้าเว็บ Streamlit
+st.title("Naïve Bayes Classifier - Iris Dataset")
+st.write("ป้อนคุณสมบัติของดอกไม้เพื่อทำนายประเภท")
 
-st.write("Line_Chart")
-cc=[3,8,1,10]
-st.line_chart(cc)
+# รับค่าจากผู้ใช้ผ่าน slider
+sepal_length = st.slider("Sepal Length (cm)", float(X[:,0].min()), float(X[:,0].max()), float(X[:,0].mean()))
+sepal_width = st.slider("Sepal Width (cm)", float(X[:,1].min()), float(X[:,1].max()), float(X[:,1].mean()))
+petal_length = st.slider("Petal Length (cm)", float(X[:,2].min()), float(X[:,2].max()), float(X[:,2].mean()))
+petal_width = st.slider("Petal Width (cm)", float(X[:,3].min()), float(X[:,3].max()), float(X[:,3].mean()))
+
+# สร้างอาร์เรย์ข้อมูลจากค่าที่ป้อน
+input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+
+# ทำนายผลลัพธ์
+prediction = model.predict(input_data)
+prediction_proba = model.predict_proba(input_data)
+
+# แสดงผลลัพธ์
+st.subheader("ผลลัพธ์ที่ได้:")
+st.write(f"ชนิดของดอกไม้ที่คาดการณ์: *{iris.target_names[prediction[0]]}*")
+
+# แสดงความน่าจะเป็นของแต่ละคลาส
+st.subheader("ความน่าจะเป็นของแต่ละประเภท:")
+df_proba = pd.DataFrame(prediction_proba, columns=iris.target_names)
+st.dataframe(df_proba.style.format("{:.2%}"))
